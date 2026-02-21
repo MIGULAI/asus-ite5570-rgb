@@ -1,0 +1,7 @@
+{
+    "mode": "static",
+    "color": [255, 0, 0],
+    "intensity": 255,
+    "breathe_step_ms": 20
+}
+

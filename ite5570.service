@@ -1,0 +1,38 @@
+[Unit]
+Description=ITE5570 RGB Lighting Daemon
+# Wait until the HID subsystem is fully initialized
+After=systemd-udevd.service
+# If the service crashes, restart it — handles device re-enumeration after suspend
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/ite5570/ite5570_daemon.py
+
+# Run as root so it can open /dev/hidraw without a udev rule
+# To run as a regular user instead, add the udev rule (see install.sh) and set:
+#   User=your_username
+#   Group=input
+User=root
+
+# Restart on crash but not on clean exit (e.g. systemctl stop)
+Restart=on-failure
+RestartSec=3s
+
+# Send SIGTERM on stop → daemon catches it, releases LEDs to firmware, exits cleanly
+KillSignal=SIGTERM
+TimeoutStopSec=5s
+
+# Reload config without restarting: systemctl reload ite5570
+# Daemon catches SIGHUP and re-reads /etc/ite5570/config.json
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Logging goes to journald automatically (stdout → journal)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ite5570
+
+[Install]
+# Start on boot when reaching multi-user target (normal desktop/server runlevel)
+WantedBy=multi-user.target
